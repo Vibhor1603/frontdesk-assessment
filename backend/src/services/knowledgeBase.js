@@ -5,6 +5,41 @@ import { groqChat } from "./groqService.js";
 const SIMILARITY_THRESHOLD = 0.7; // Adjust based on testing
 
 /**
+ * Detect if user wants to make a booking
+ */
+async function detectBookingIntent(query) {
+  try {
+    const prompt = `Determine if this customer query is asking to book/schedule an appointment.
+
+Booking indicators:
+- "book an appointment"
+- "schedule a visit"
+- "make a reservation"
+- "I want to book"
+- "can I schedule"
+- "reserve a time"
+
+Customer query: "${query}"
+
+Respond with ONLY valid JSON:
+{"isBooking": true/false, "service": "detected service or null"}
+
+Examples:
+- "I want to book a haircut" → {"isBooking": true, "service": "haircut"}
+- "Can I schedule a massage?" → {"isBooking": true, "service": "massage"}
+- "What are your hours?" → {"isBooking": false, "service": null}`;
+
+    const response = await groqChat(prompt);
+    const parsed = JSON.parse(response.trim());
+
+    return parsed;
+  } catch (error) {
+    console.error("[KB] Error detecting booking intent:", error);
+    return { isBooking: false, service: null };
+  }
+}
+
+/**
  * Check if query is within scope for a salon/spa business
  */
 async function checkQueryScope(query) {
@@ -80,6 +115,25 @@ export async function processQuery(
         needsHelp: false,
         answer: scopeCheck.response,
         outOfScope: true,
+      };
+    }
+
+    // Check if user wants to make a booking
+    const bookingIntent = await detectBookingIntent(query);
+
+    if (bookingIntent.isBooking) {
+      console.log(
+        `[KB] Booking intent detected for: ${
+          bookingIntent.service || "general"
+        }`
+      );
+      return {
+        found: true,
+        needsHelp: false,
+        answer:
+          "I'd be happy to help you book an appointment! Please provide your details so I can create your booking.",
+        requiresBooking: true,
+        bookingType: bookingIntent.service,
       };
     }
 

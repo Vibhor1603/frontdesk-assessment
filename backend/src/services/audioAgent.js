@@ -133,8 +133,16 @@ export async function handleCustomerMessage(text, participantId) {
 
     let responseText;
     let needsEmail = false;
+    let requiresBooking = false;
+    let bookingType = null;
 
-    if (kbResult.needsHelp) {
+    if (kbResult.requiresBooking) {
+      // User wants to book an appointment
+      console.log(`[Agent] 📅 Booking requested`);
+      responseText = kbResult.answer;
+      requiresBooking = true;
+      bookingType = kbResult.bookingType;
+    } else if (kbResult.needsHelp) {
       console.log(`[Agent] 🆘 Escalating to supervisor`);
 
       // Always ask for email when escalating (don't reuse old email)
@@ -174,6 +182,8 @@ export async function handleCustomerMessage(text, participantId) {
       audio: `data:audio/mpeg;base64,${audioBase64}`,
       timestamp: new Date().toISOString(),
       needsEmail, // Signal frontend to show email toast
+      requiresBooking, // Signal frontend to show booking form
+      bookingType, // Type of service to book
       helpRequestId: kbResult.helpRequestId,
     };
   } catch (error) {

@@ -234,10 +234,53 @@ export default function LiveKitVoiceChat() {
       const data = await response.json();
       console.log("✅ Received response from agent");
 
-      // Display and play response
+      // Display and play response FIRST (don't wait)
       if (data.message) {
         handleAgentMessage(data.message);
+      }
 
+      // Then check if booking is required (show form while audio plays)
+      if (data.message?.requiresBooking) {
+        console.log("📅 Booking required, showing booking form");
+
+        const { showBookingToast } = await import("./BookingToast.jsx");
+
+        // Show form (non-blocking - audio continues playing)
+        showBookingToast(async (bookingData) => {
+          if (bookingData) {
+            try {
+              const response = await fetch(
+                "http://localhost:3000/api/bookings/create",
+                {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    ...bookingData,
+                    participantId,
+                    roomName: "customer-service",
+                  }),
+                }
+              );
+
+              const result = await response.json();
+
+              if (result.success) {
+                toast.success("Appointment booked successfully! 📅");
+                console.log("✅ Booking created:", result.booking);
+              } else {
+                toast.error("Failed to book appointment");
+                console.error("❌ Booking failed:", result.error);
+              }
+            } catch (error) {
+              console.error("❌ Booking error:", error);
+              toast.error("Failed to create booking");
+            }
+          }
+        });
+      }
+
+      // Continue with other checks
+      if (data.message) {
         // Check if email is needed
         if (data.message.needsEmail) {
           console.log("📧 Email required, showing toast");

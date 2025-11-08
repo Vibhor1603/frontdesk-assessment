@@ -7,6 +7,7 @@ import knowledge from "./routes/knowledge.js";
 import supervisor from "./routes/supervisor.js";
 import agent from "./routes/agent.js";
 import webhooks from "./routes/webhooks.js";
+import bookings from "./routes/bookings.js";
 import { initializeDatabase } from "./db/supabase.js";
 import { supabase } from "./db/supabase.js";
 import { startAgent } from "./services/audioAgent.js";
@@ -27,6 +28,8 @@ app.use("/api/knowledge", knowledge);
 app.use("/api/supervisor", supervisor);
 app.use("/api/agent", agent);
 app.use("/api/webhooks", webhooks);
+app.use("/api/bookings", bookings);
+app.use("/oauth2callback", bookings); // OAuth callback route
 
 // Initialize database
 initializeDatabase().catch((error) => {
