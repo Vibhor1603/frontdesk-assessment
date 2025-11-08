@@ -1,17 +1,17 @@
 import dotenv from "dotenv";
 import express from "express";
 import cors from "cors";
-import auth from "./routes/auth.js";
-import voice from "./routes/voice.js";
-import knowledge from "./routes/knowledge.js";
-import supervisor from "./routes/supervisor.js";
-import agent from "./routes/agent.js";
-import webhooks from "./routes/webhooks.js";
-import bookings from "./routes/bookings.js";
-import { initializeDatabase } from "./db/supabase.js";
-import { supabase } from "./db/supabase.js";
-import { startAgent } from "./services/audioAgent.js";
-import { initializeRealtimeSubscription } from "./services/supervisorNotifications.js";
+import auth from "./core/routes/auth.js";
+import voice from "./features/voice/routes/voice.js";
+import knowledge from "./features/knowledge/routes/knowledge.js";
+import supervisor from "./features/supervisor/routes/supervisor.js";
+import agent from "./features/agent/routes/agent.js";
+import webhooks from "./features/supervisor/routes/webhooks.js";
+import bookings from "./features/booking/routes/bookings.js";
+import { initializeDatabase } from "./core/db/supabase.js";
+import { supabase } from "./core/db/supabase.js";
+import { startAgent } from "./features/voice/services/livekitService.js";
+import { initializeRealtimeSubscription } from "./features/supervisor/services/supervisorNotifications.js";
 
 dotenv.config();
 
@@ -37,19 +37,14 @@ initializeDatabase().catch((error) => {
 });
 
 app.listen(port, async () => {
-  console.log(`Server listening on port ${port}`);
-
   // Initialize realtime subscription for supervisor dashboard
   initializeRealtimeSubscription();
 
   // Auto-start the audio agent
   try {
-    console.log("Starting audio agent with RAG/KB...");
     await startAgent("customer-service");
-    console.log("✅ Audio agent started successfully");
   } catch (error) {
     console.error("Failed to start audio agent:", error);
-    console.log("You can manually start it via POST /api/agent/start");
   }
 });
 
@@ -72,7 +67,7 @@ setInterval(async () => {
         error.message || error
       );
     } else {
-      // console.log("Stale help requests marked unresolved (if any)");
+      //");
     }
   } catch (e) {
     console.error("Error in pending-request cleanup job:", e.message || e);

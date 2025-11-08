@@ -1,0 +1,149 @@
+{
+  "summary": {
+    "totalFiles": 41,
+    "reachableFiles": 31,
+    "unreachableFiles": 12,
+    "totalUnreachableSize": 85340,
+    "entryPoints": [
+      "C:\\Users\\Vibhor Sharma\\OneDrive\\Desktop\\frontdesk-ai-agent\\frontend\\src\\main.jsx",
+      "C:\\Users\\Vibhor Sharma\\OneDrive\\Desktop\\frontdesk-ai-agent\\frontend\\src\\App.jsx",
+      "C:\\Users\\Vibhor Sharma\\OneDrive\\Desktop\\frontdesk-ai-agent\\backend\\src\\index.js",
+      "C:\\Users\\Vibhor Sharma\\OneDrive\\Desktop\\frontdesk-ai-agent\\admin-dashboard\\src\\main.jsx",
+      "C:\\Users\\Vibhor Sharma\\OneDrive\\Desktop\\frontdesk-ai-agent\\admin-dashboard\\src\\App.jsx"
+    ]
+  },
+  "unreachableFiles": [
+    {
+      "path": "C:\\Users\\Vibhor Sharma\\OneDrive\\Desktop\\frontdesk-ai-agent\\backend\\src\\services\\livekitAudioAgent.js",
+      "size": 19536,
+      "sizeKB": "19.08"
+    },
+    {
+      "path": "C:\\Users\\Vibhor Sharma\\OneDrive\\Desktop\\frontdesk-ai-agent\\frontend\\src\\components\\VoiceCall.jsx",
+      "size": 14181,
+      "sizeKB": "13.85"
+    },
+    {
+      "path": "C:\\Users\\Vibhor Sharma\\OneDrive\\Desktop\\frontdesk-ai-agent\\backend\\src\\services\\realtimeVoiceAgent.js",
+      "size": 13402,
+      "sizeKB": "13.09"
+    },
+    {
+      "path": "C:\\Users\\Vibhor Sharma\\OneDrive\\Desktop\\frontdesk-ai-agent\\backend\\src\\services\\livekitAgent.js",
+      "size": 10307,
+      "sizeKB": "10.07"
+    },
+    {
+      "path": "C:\\Users\\Vibhor Sharma\\OneDrive\\Desktop\\frontdesk-ai-agent\\frontend\\src\\components\\SimpleVoiceChat.jsx",
+      "size": 9712,
+      "sizeKB": "9.48"
+    },
+    {
+      "path": "C:\\Users\\Vibhor Sharma\\OneDrive\\Desktop\\frontdesk-ai-agent\\admin-dashboard\\src\\components\\Dashboard.jsx",
+      "size": 8152,
+      "sizeKB": "7.96"
+    },
+    {
+      "path": "C:\\Users\\Vibhor Sharma\\OneDrive\\Desktop\\frontdesk-ai-agent\\frontend\\src\\components\\BookingToast.jsx",
+      "size": 6519,
+      "sizeKB": "6.37"
+    },
+    {
+      "path": "C:\\Users\\Vibhor Sharma\\OneDrive\\Desktop\\frontdesk-ai-agent\\frontend\\src\\components\\UniversalVisualizer.jsx",
+      "size": 2345,
+      "sizeKB": "2.29"
+    },
+    {
+      "path": "C:\\Users\\Vibhor Sharma\\OneDrive\\Desktop\\frontdesk-ai-agent\\frontend\\src\\api\\client.js",
+      "size": 954,
+      "sizeKB": "0.93"
+    },
+    {
+      "path": "C:\\Users\\Vibhor Sharma\\OneDrive\\Desktop\\frontdesk-ai-agent\\frontend\\src\\hooks\\useVoiceAssistant.js",
+      "size": 232,
+      "sizeKB": "0.23"
+    },
+    {
+      "path": "C:\\Users\\Vibhor Sharma\\OneDrive\\Desktop\\frontdesk-ai-agent\\backend\\src\\routes\\requests.js",
+      "size": 0,
+      "sizeKB": "0.00"
+    },
+    {
+      "path": "C:\\Users\\Vibhor Sharma\\OneDrive\\Desktop\\frontdesk-ai-agent\\backend\\src\\services\\liveKit.js",
+      "size": 0,
+      "sizeKB": "0.00"
+    }
+  ],
+  "categorized": {
+    "frontend": {
+      "components": [
+        {
+          "path": "C:\\Users\\Vibhor Sharma\\OneDrive\\Desktop\\frontdesk-ai-agent\\frontend\\src\\components\\VoiceCall.jsx",
+          "size": 14181
+        },
+        {
+          "path": "C:\\Users\\Vibhor Sharma\\OneDrive\\Desktop\\frontdesk-ai-agent\\frontend\\src\\components\\SimpleVoiceChat.jsx",
+          "size": 9712
+        },
+        {
+          "path": "C:\\Users\\Vibhor Sharma\\OneDrive\\Desktop\\frontdesk-ai-agent\\frontend\\src\\components\\BookingToast.jsx",
+          "size": 6519
+        },
+        {
+          "path": "C:\\Users\\Vibhor Sharma\\OneDrive\\Desktop\\frontdesk-ai-agent\\frontend\\src\\components\\UniversalVisualizer.jsx",
+          "size": 2345
+        }
+      ],
+      "hooks": [
+        {
+          "path": "C:\\Users\\Vibhor Sharma\\OneDrive\\Desktop\\frontdesk-ai-agent\\frontend\\src\\hooks\\useVoiceAssistant.js",
+          "size": 232
+        }
+      ],
+      "services": [
+        {
+          "path": "C:\\Users\\Vibhor Sharma\\OneDrive\\Desktop\\frontdesk-ai-agent\\frontend\\src\\api\\client.js",
+          "size": 954
+        }
+      ],
+      "other": []
+    },
+    "backend": {
+      "routes": [
+        {
+          "path": "C:\\Users\\Vibhor Sharma\\OneDrive\\Desktop\\frontdesk-ai-agent\\backend\\src\\routes\\requests.js",
+          "size": 0
+        }
+      ],
+      "services": [
+        {
+          "path": "C:\\Users\\Vibhor Sharma\\OneDrive\\Desktop\\frontdesk-ai-agent\\backend\\src\\services\\livekitAudioAgent.js",
+          "size": 19536
+        },
+        {
+          "path": "C:\\Users\\Vibhor Sharma\\OneDrive\\Desktop\\frontdesk-ai-agent\\backend\\src\\services\\realtimeVoiceAgent.js",
+          "size": 13402
+        },
+        {
+          "path": "C:\\Users\\Vibhor Sharma\\OneDrive\\Desktop\\frontdesk-ai-agent\\backend\\src\\services\\livekitAgent.js",
+          "size": 10307
+        },
+        {
+          "path": "C:\\Users\\Vibhor Sharma\\OneDrive\\Desktop\\frontdesk-ai-agent\\backend\\src\\services\\liveKit.js",
+          "size": 0
+        }
+      ],
+      "other": []
+    },
+    "adminDashboard": {
+      "components": [
+        {
+          "path": "C:\\Users\\Vibhor Sharma\\OneDrive\\Desktop\\frontdesk-ai-agent\\admin-dashboard\\src\\components\\Dashboard.jsx",
+          "size": 8152
+        }
+      ],
+      "other": []
+    }
+  },
+  "unresolvedImports": []
+}

@@ -1,4 +1,4 @@
-import LiveKitVoiceChat from "./components/LiveKitVoiceChat";
+import LiveKitVoiceChat from "./features/voice/components/LiveKitVoiceChat";
 
 function App() {
   // Default: customer voice interface with LiveKit real-time audio streaming

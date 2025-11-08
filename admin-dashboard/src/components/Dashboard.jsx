@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { BellIcon, CheckCircleIcon } from "@heroicons/react/24/outline";
 
 export default function Dashboard() {
@@ -38,7 +38,7 @@ export default function Dashboard() {
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ answer }),
+          body: JSON.stringify({ answer })
         }
       );
 
@@ -46,11 +46,11 @@ export default function Dashboard() {
 
       // Update local state
       setHelpRequests((prev) =>
-        prev.map((req) =>
-          req.id === selectedRequest.id
-            ? { ...req, status: "resolved", answer }
-            : req
-        )
+      prev.map((req) =>
+      req.id === selectedRequest.id ?
+      { ...req, status: "resolved", answer } :
+      req
+      )
       );
 
       setSelectedRequest(null);
@@ -71,11 +71,11 @@ export default function Dashboard() {
           </h1>
           <div className="relative">
             <BellIcon className="h-6 w-6 text-gray-400" />
-            {helpRequests.filter((r) => r.status === "pending").length > 0 && (
-              <span className="absolute -top-1 -right-1 bg-red-500 rounded-full w-4 h-4 flex items-center justify-center text-xs text-white">
+            {helpRequests.filter((r) => r.status === "pending").length > 0 &&
+            <span className="absolute -top-1 -right-1 bg-red-500 rounded-full w-4 h-4 flex items-center justify-center text-xs text-white">
                 {helpRequests.filter((r) => r.status === "pending").length}
               </span>
-            )}
+            }
           </div>
         </div>
 
@@ -86,14 +86,14 @@ export default function Dashboard() {
               Pending Requests
             </h2>
             <div className="space-y-4">
-              {helpRequests
-                .filter((req) => req.status === "pending")
-                .map((request) => (
-                  <div
-                    key={request.id}
-                    className="bg-dashboard-darker rounded-lg p-4 cursor-pointer hover:ring-2 hover:ring-blue-500 transition"
-                    onClick={() => setSelectedRequest(request)}
-                  >
+              {helpRequests.
+              filter((req) => req.status === "pending").
+              map((request) =>
+              <div
+                key={request.id}
+                className="bg-dashboard-darker rounded-lg p-4 cursor-pointer hover:ring-2 hover:ring-blue-500 transition"
+                onClick={() => setSelectedRequest(request)}>
+                
                     <div className="flex items-start justify-between">
                       <div>
                         <p className="text-sm font-medium text-gray-300">
@@ -108,13 +108,13 @@ export default function Dashboard() {
                       </div>
                     </div>
                   </div>
-                ))}
+              )}
             </div>
           </div>
 
           {/* Answer Form */}
-          {selectedRequest && (
-            <div className="bg-dashboard-light rounded-lg p-6">
+          {selectedRequest &&
+          <div className="bg-dashboard-light rounded-lg p-6">
               <h2 className="text-lg font-medium text-white mb-4">
                 Provide Answer
               </h2>
@@ -132,35 +132,35 @@ export default function Dashboard() {
                     Your Answer
                   </label>
                   <textarea
-                    rows="4"
-                    className="w-full bg-dashboard-darker text-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                    value={answer}
-                    onChange={(e) => setAnswer(e.target.value)}
-                    placeholder="Type your answer here..."
-                  />
+                  rows="4"
+                  className="w-full bg-dashboard-darker text-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  value={answer}
+                  onChange={(e) => setAnswer(e.target.value)}
+                  placeholder="Type your answer here..." />
+                
                 </div>
                 <div className="flex justify-end space-x-3">
                   <button
-                    type="button"
-                    className="px-4 py-2 text-sm font-medium text-gray-300 hover:text-white"
-                    onClick={() => {
-                      setSelectedRequest(null);
-                      setAnswer("");
-                    }}
-                  >
+                  type="button"
+                  className="px-4 py-2 text-sm font-medium text-gray-300 hover:text-white"
+                  onClick={() => {
+                    setSelectedRequest(null);
+                    setAnswer("");
+                  }}>
+                  
                     Cancel
                   </button>
                   <button
-                    type="submit"
-                    disabled={isAnswering}
-                    className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-dashboard-light disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
+                  type="submit"
+                  disabled={isAnswering}
+                  className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-dashboard-light disabled:opacity-50 disabled:cursor-not-allowed">
+                  
                     {isAnswering ? "Submitting..." : "Submit Answer"}
                   </button>
                 </div>
               </form>
             </div>
-          )}
+          }
 
           {/* Resolved Requests */}
           <div className="bg-dashboard-light rounded-lg p-6 lg:col-span-2">
@@ -168,13 +168,13 @@ export default function Dashboard() {
               Resolved Requests
             </h2>
             <div className="space-y-4">
-              {helpRequests
-                .filter((req) => req.status === "resolved")
-                .map((request) => (
-                  <div
-                    key={request.id}
-                    className="bg-dashboard-darker rounded-lg p-4"
-                  >
+              {helpRequests.
+              filter((req) => req.status === "resolved").
+              map((request) =>
+              <div
+                key={request.id}
+                className="bg-dashboard-darker rounded-lg p-4">
+                
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center">
@@ -195,11 +195,11 @@ export default function Dashboard() {
                       </div>
                     </div>
                   </div>
-                ))}
+              )}
             </div>
           </div>
         </div>
       </div>
-    </div>
-  );
+    </div>);
+
 }

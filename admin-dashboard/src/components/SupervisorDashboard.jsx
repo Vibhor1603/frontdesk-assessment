@@ -87,37 +87,27 @@ function SupervisorDashboard() {
       `${API_BASE_URL}/api/supervisor/events`
     );
 
-    eventSource.onopen = () => {
-      console.log("[SSE] Connected to server");
-      setConnected(true);
+    eventSource.onopen = () => {setConnected(true);
       toast.success("Connected to real-time updates");
     };
 
     eventSource.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
-        if (data.type === "connected") {
-          console.log("[SSE] Connection confirmed");
-        }
+        if (data.type === "connected") {}
       } catch (error) {
         console.error("[SSE] Error parsing message:", error);
       }
     };
 
-    eventSource.addEventListener("new-request", () => {
-      console.log("[SSE] New help request received");
-      toast("New help request!", { icon: "🔔" });
+    eventSource.addEventListener("new-request", () => {toast("New help request!", { icon: "🔔" });
       refreshData();
     });
 
-    eventSource.addEventListener("request-answered", () => {
-      console.log("[SSE] Request answered");
-      refreshData();
+    eventSource.addEventListener("request-answered", () => {refreshData();
     });
 
-    eventSource.addEventListener("request-timeout", () => {
-      console.log("[SSE] Request timed out");
-      refreshData();
+    eventSource.addEventListener("request-timeout", () => {refreshData();
     });
 
     eventSource.onerror = () => {
