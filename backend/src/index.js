@@ -29,7 +29,7 @@ app.use("/api/supervisor", supervisor);
 app.use("/api/agent", agent);
 app.use("/api/webhooks", webhooks);
 app.use("/api/bookings", bookings);
-app.use("/oauth2callback", bookings); // OAuth callback route
+app.use("/", bookings); // OAuth callback route at root level
 
 // Initialize database
 initializeDatabase().catch((error) => {
