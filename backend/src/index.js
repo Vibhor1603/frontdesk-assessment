@@ -3,6 +3,7 @@ import express from "express";
 import cors from "cors";
 import auth from "./core/routes/auth.js";
 import voice from "./features/voice/routes/voice.js";
+import deepgram from "./features/voice/routes/deepgram.js";
 import knowledge from "./features/knowledge/routes/knowledge.js";
 import supervisor from "./features/supervisor/routes/supervisor.js";
 import agent from "./features/agent/routes/agent.js";
@@ -24,6 +25,7 @@ app.use(express.json());
 // Routes
 app.use("/api/auth", auth);
 app.use("/api/voice", voice);
+app.use("/api/deepgram", deepgram);
 app.use("/api/knowledge", knowledge);
 app.use("/api/supervisor", supervisor);
 app.use("/api/agent", agent);

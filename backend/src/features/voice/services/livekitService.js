@@ -63,35 +63,52 @@ export async function generateVoice(text) {
     const VOICE_ID = process.env.ELEVENLABS_VOICE_ID || "21m00Tcm4TlvDq8ikWAM";
     const API_KEY = process.env.ELEVEN_LABS_API_KEY;
 
-    const response = await fetch(
-      `https://api.elevenlabs.io/v1/text-to-speech/${VOICE_ID}`,
-      {
-        method: "POST",
-        headers: {
-          Accept: "audio/mpeg",
-          "Content-Type": "application/json",
-          "xi-api-key": API_KEY,
-        },
-        body: JSON.stringify({
-          text: text,
-          model_id: "eleven_multilingual_v2",
-          voice_settings: {
-            stability: 0.5,
-            similarity_boost: 0.75,
-          },
-        }),
-      }
-    );
+    // Debug logging
+    console.log("[ElevenLabs] API Key present:", !!API_KEY);
+    console.log("[ElevenLabs] API Key length:", API_KEY?.length);
+    console.log("[ElevenLabs] API Key starts with:", API_KEY?.substring(0, 5));
+    console.log("[ElevenLabs] Voice ID:", VOICE_ID);
 
-    if (!response.ok) {
+    if (!API_KEY) {
       throw new Error(
-        `ElevenLabs API error: ${response.status} ${response.statusText}`
+        "ELEVEN_LABS_API_KEY is not set in environment variables"
       );
     }
 
+    const url = `https://api.elevenlabs.io/v1/text-to-speech/${VOICE_ID}`;
+    console.log("[ElevenLabs] Request URL:", url);
+
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Accept: "audio/mpeg",
+        "Content-Type": "application/json",
+        "xi-api-key": API_KEY.trim(),
+      },
+      body: JSON.stringify({
+        text: text,
+        model_id: "eleven_multilingual_v2",
+        voice_settings: {
+          stability: 0.5,
+          similarity_boost: 0.75,
+        },
+      }),
+    });
+
+    console.log("[ElevenLabs] Response status:", response.status);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("[ElevenLabs] Error response body:", errorText);
+      throw new Error(
+        `ElevenLabs API error: ${response.status} ${response.statusText} - ${errorText}`
+      );
+    }
+
+    console.log("[ElevenLabs] ✅ Successfully generated voice");
     return await response.arrayBuffer();
   } catch (error) {
-    console.error("Error generating voice:", error);
+    console.error("[ElevenLabs] ❌ Error:", error);
     throw error;
   }
 }
