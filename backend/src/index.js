@@ -1,18 +1,16 @@
 import dotenv from "dotenv";
 import express from "express";
 import cors from "cors";
-import auth from "./core/routes/auth.js";
-import voice from "./features/voice/routes/voice.js";
-import deepgram from "./features/voice/routes/deepgram.js";
-import knowledge from "./features/knowledge/routes/knowledge.js";
-import supervisor from "./features/supervisor/routes/supervisor.js";
-import agent from "./features/agent/routes/agent.js";
-import webhooks from "./features/supervisor/routes/webhooks.js";
-import bookings from "./features/booking/routes/bookings.js";
-import { initializeDatabase } from "./core/db/supabase.js";
-import { supabase } from "./core/db/supabase.js";
-import { startAgent } from "./features/voice/services/livekitService.js";
-import { initializeRealtimeSubscription } from "./features/supervisor/services/supervisorNotifications.js";
+import auth from "./routes/auth.js";
+import deepgram from "./routes/deepgram.js";
+import supervisor from "./routes/supervisor.js";
+import agent from "./routes/agent.js";
+import webhooks from "./routes/webhooks.js";
+import bookings from "./routes/bookings.js";
+import { initializeDatabase } from "./db/supabase.js";
+import { supabase } from "./db/supabase.js";
+import { startAgent } from "./services/livekitService.js";
+import { initializeRealtimeSubscription } from "./services/supervisorNotifications.js";
 
 dotenv.config();
 
@@ -24,9 +22,7 @@ app.use(express.json());
 
 // Routes
 app.use("/api/auth", auth);
-app.use("/api/voice", voice);
 app.use("/api/deepgram", deepgram);
-app.use("/api/knowledge", knowledge);
 app.use("/api/supervisor", supervisor);
 app.use("/api/agent", agent);
 app.use("/api/webhooks", webhooks);

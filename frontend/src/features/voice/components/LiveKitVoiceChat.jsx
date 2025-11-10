@@ -254,7 +254,7 @@ export default function LiveKitVoiceChat() {
                 ? "Frontdesk Salon Agent is speaking..."
                 : isListening
                 ? "Listening..."
-                : "Frontdesk Salon Agent is listening..."}
+                : "Frontdesk Salon Agent is ready"}
             </h2>
 
             <SimpleVisualizer isActive={isListening || isAgentSpeaking} />
