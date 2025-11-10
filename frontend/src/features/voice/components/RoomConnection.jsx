@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { useRoomContext } from "@livekit/components-react";
 import toast from "react-hot-toast";
 
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+
 export function RoomConnection({
   participantIdRef,
   onMessage,
@@ -27,7 +29,7 @@ export function RoomConnection({
 
       try {
         const response = await fetch(
-          "http://localhost:3000/api/webhooks/participant-joined",
+          `${API_URL}/api/webhooks/participant-joined`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },

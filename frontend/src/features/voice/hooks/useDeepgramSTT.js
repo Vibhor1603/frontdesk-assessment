@@ -1,10 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+const DEEPGRAM_URL =
+  import.meta.env.VITE_DEEPGRAM_URL || "wss://api.deepgram.com/v1/listen";
+
 export function useDeepgramSTT(onTranscript) {
   const [isListening, setIsListening] = useState(false);
-  const [interimText, setInterimText] = useState(""); // For showing interim results
+  const [interimText, setInterimText] = useState("");
   const socketRef = useRef(null);
-
   const streamRef = useRef(null);
   const audioContextRef = useRef(null);
   const processorRef = useRef(null);
@@ -12,10 +15,7 @@ export function useDeepgramSTT(onTranscript) {
 
   const startListening = async () => {
     try {
-      // Get Deepgram API key from backend
-      const response = await fetch(
-        "http://localhost:3000/api/deepgram/api-key"
-      );
+      const response = await fetch(`${API_URL}/api/deepgram/api-key`);
       const { apiKey } = await response.json();
 
       if (!apiKey) {
@@ -48,20 +48,26 @@ export function useDeepgramSTT(onTranscript) {
         smart_format: "true", // Better formatting
       });
 
-      const socket = new WebSocket(
-        `wss://api.deepgram.com/v1/listen?${params.toString()}`,
-        ["token", apiKey]
-      );
+      const socket = new WebSocket(`${DEEPGRAM_URL}?${params.toString()}`, [
+        "token",
+        apiKey,
+      ]);
 
       socketRef.current = socket;
 
-      socket.onopen = () => {
+      socket.onopen = async () => {
         setIsListening(true);
 
-        // Use AudioContext to get raw PCM data
         const audioContext = new (window.AudioContext ||
-          window.webkitAudioContext)({ sampleRate: 16000 });
+          window.webkitAudioContext)({
+          sampleRate: 16000,
+          latencyHint: "interactive",
+        });
         audioContextRef.current = audioContext;
+
+        if (audioContext.state === "suspended") {
+          await audioContext.resume();
+        }
 
         const source = audioContext.createMediaStreamSource(stream);
         const processor = audioContext.createScriptProcessor(4096, 1, 1);
@@ -70,9 +76,8 @@ export function useDeepgramSTT(onTranscript) {
         processor.onaudioprocess = (e) => {
           if (socket.readyState === WebSocket.OPEN) {
             const inputData = e.inputBuffer.getChannelData(0);
-
-            // Convert Float32Array to Int16Array (PCM)
             const pcmData = new Int16Array(inputData.length);
+
             for (let i = 0; i < inputData.length; i++) {
               const s = Math.max(-1, Math.min(1, inputData[i]));
               pcmData[i] = s < 0 ? s * 0x8000 : s * 0x7fff;

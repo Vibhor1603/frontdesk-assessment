@@ -44,55 +44,36 @@ Examples:
  */
 async function checkQueryScope(query) {
   try {
-    const prompt = `You are a scope detector for a salon and spa business AI assistant.
+    const prompt = `You are a friendly, conversational AI receptionist for Luxe Salon & Spa.
 
-Determine if this customer query is relevant to a salon/spa business.
+Analyze this customer message: "${query}"
 
-IN SCOPE topics include:
-- Services (haircuts, coloring, styling, nails, spa treatments, massages, facials, etc.)
-- Pricing and packages
-- Hours of operation
-- Location and directions
-- Booking appointments
-- Staff and stylists
-- Products sold
-- Policies (cancellation, payment, etc.)
-- Facilities and amenities
-- Gift cards and promotions
+Determine the type:
+1. GREETING/SMALL TALK: greetings, how are you, what are you doing, who are you, what's your name, tell me about yourself, casual conversation about the AI
+2. SALON SERVICES: anything about haircuts, spa, appointments, hours, pricing, services, location, staff
+3. UNRELATED: weather, news, sports, unrelated businesses, general knowledge
 
-OUT OF SCOPE topics include:
-- Personal questions about the AI ("how are you", "what's your name")
-- Unrelated businesses or services
-- General knowledge questions
-- Technical support for other products
-- Medical advice
-- Personal advice or counseling
-- Current events, news, politics
-- Entertainment, sports, weather (unless asking about weather affecting appointments)
+Respond with ONLY valid JSON:
 
-Customer query: "${query}"
+For GREETINGS/SMALL TALK about the AI: {"inScope": true, "isGreeting": true, "response": "friendly, natural response + mention you're here to help with salon services"}
+For SALON TOPICS: {"inScope": true}
+For UNRELATED: {"inScope": false, "response": "polite decline + what you can help with"}
 
-Respond with ONLY valid JSON in this format:
-{"inScope": true/false, "reason": "brief reason", "response": "polite response if out of scope"}
+Examples:
+"hi" → {"inScope": true, "isGreeting": true, "response": "Hi there! Welcome to Luxe Salon. I'm here to help you with appointments, services, or any questions. What can I do for you?"}
+"what are you doing" → {"inScope": true, "isGreeting": true, "response": "I'm here ready to assist you! I help customers with booking appointments, answering questions about our salon and spa services, and anything else you need. How can I help you today?"}
+"who are you" → {"inScope": true, "isGreeting": true, "response": "I'm your virtual receptionist for Luxe Salon & Spa! I'm here to help you book appointments, learn about our services, or answer any questions you have. What would you like to know?"}
+"how are you" → {"inScope": true, "isGreeting": true, "response": "I'm doing great, thanks for asking! I'm here and ready to help you with anything salon or spa related. What brings you in today?"}
+"what's your name" → {"inScope": true, "isGreeting": true, "response": "I'm the Frontdesk Salon Agent for Luxe Salon & Spa! I'm here to help you with bookings, services, and any questions. How can I assist you?"}
+"what's the weather" → {"inScope": false, "response": "I wish I could help with that, but I'm specifically here for salon and spa services. However, I'd be happy to help you book an appointment or answer questions about our treatments!"}
 
-If IN SCOPE: {"inScope": true}
-If OUT OF SCOPE: {"inScope": false, "reason": "personal question", "response": "I'm here to help with salon and spa services. Is there anything about our services, hours, or appointments I can help you with?"}`;
+Be natural, warm, and conversational. Vary responses - never repeat the same answer.`;
 
     const response = await groqChat(prompt);
     const parsed = JSON.parse(response.trim());
 
-    return parsed.inScope
-      ? { inScope: true }
-      : {
-          inScope: false,
-          reason: parsed.reason || "out of scope",
-          response:
-            parsed.response ||
-            "I'm here to help with salon and spa services. How can I assist you today?",
-        };
+    return parsed;
   } catch (error) {
-    console.error("[KB] Error checking scope:", error);
-    // If scope check fails, assume in scope to avoid blocking valid queries
     return { inScope: true };
   }
 }
@@ -103,7 +84,6 @@ export async function processQuery(
   roomName = null
 ) {
   try {
-    // First, check if query is in scope for a salon/spa
     const scopeCheck = await checkQueryScope(query);
 
     if (!scopeCheck.inScope) {
@@ -115,7 +95,15 @@ export async function processQuery(
       };
     }
 
-    // Check if user wants to make a booking
+    if (scopeCheck.isGreeting && scopeCheck.response) {
+      return {
+        found: true,
+        needsHelp: false,
+        answer: scopeCheck.response,
+        isGreeting: true,
+      };
+    }
+
     const bookingIntent = await detectBookingIntent(query);
 
     if (bookingIntent.isBooking) {

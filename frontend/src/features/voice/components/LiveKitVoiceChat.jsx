@@ -3,15 +3,17 @@ import { LiveKitRoom, RoomAudioRenderer } from "@livekit/components-react";
 import "@livekit/components-styles";
 import toast, { Toaster } from "react-hot-toast";
 import { useDeepgramSTT } from "../hooks/useDeepgramSTT";
-import { AudioVisualizer } from "./AudioVisualizer";
 import { RoomConnection } from "./RoomConnection";
 import { VoiceControls } from "./VoiceControls";
 import { ChatInput } from "./ChatInput";
+import { SimpleVisualizer } from "./SimpleVisualizer";
 import {
   sendMessageToAgent,
   handleBookingRequest,
   handleEmailRequest,
 } from "../utils/messageHandler";
+
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 export default function LiveKitVoiceChat() {
   const [token, setToken] = useState("");
@@ -35,7 +37,7 @@ export default function LiveKitVoiceChat() {
   const connectToRoom = async () => {
     try {
       setError(null);
-      const response = await fetch("http://localhost:3000/api/auth/token", {
+      const response = await fetch(`${API_URL}/api/auth/token`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -255,7 +257,7 @@ export default function LiveKitVoiceChat() {
                 : "Frontdesk Salon Agent is listening..."}
             </h2>
 
-            <AudioVisualizer isListening={isListening} />
+            <SimpleVisualizer isActive={isListening || isAgentSpeaking} />
 
             {isListening && interimText && (
               <div className="w-full px-4 sm:px-8 max-w-2xl">
