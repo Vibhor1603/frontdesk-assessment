@@ -11,11 +11,8 @@ function SupervisorDashboard() {
   const [loading, setLoading] = useState(true);
   const [answerText, setAnswerText] = useState({});
   const [submitting, setSubmitting] = useState(null);
-  const [connected, setConnected] = useState(false);
-
   const eventSourceRef = useRef(null);
 
-  // Fetch data from API
   async function fetchRequests() {
     const statusFilter = activeTab === "pending" ? "?status=pending" : "";
     const response = await fetch(
@@ -36,99 +33,70 @@ function SupervisorDashboard() {
     return response.json();
   }
 
-  // Load initial data
   async function loadData() {
     try {
       setLoading(true);
-
       const [requestsData, statsData] = await Promise.all([
         fetchRequests(),
         fetchStats(),
       ]);
-
       setRequests(requestsData);
       setStats(statsData);
-
       if (activeTab === "learned") {
         const learnedData = await fetchLearnedAnswers();
         setLearnedAnswers(learnedData);
       }
     } catch (error) {
-      console.error("Error loading data:", error);
       toast.error("Failed to load data");
     } finally {
       setLoading(false);
     }
   }
 
-  // Refresh data (called by SSE events)
   async function refreshData() {
     try {
       const [requestsData, statsData] = await Promise.all([
         fetchRequests(),
         fetchStats(),
       ]);
-
       setRequests(requestsData);
       setStats(statsData);
-
       if (activeTab === "learned") {
         const learnedData = await fetchLearnedAnswers();
         setLearnedAnswers(learnedData);
       }
-    } catch (error) {
-      console.error("Error refreshing data:", error);
-    }
+    } catch (error) {}
   }
 
-  // Setup SSE connection
   useEffect(() => {
     const eventSource = new EventSource(
       `${API_BASE_URL}/api/supervisor/events`
     );
 
-    eventSource.onopen = () => {setConnected(true);
-      toast.success("Connected to real-time updates");
-    };
-
-    eventSource.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        if (data.type === "connected") {}
-      } catch (error) {
-        console.error("[SSE] Error parsing message:", error);
-      }
-    };
-
-    eventSource.addEventListener("new-request", () => {toast("New help request!", { icon: "🔔" });
+    eventSource.addEventListener("new-request", () => {
+      toast("New help request!", { icon: "🔔" });
       refreshData();
     });
 
-    eventSource.addEventListener("request-answered", () => {refreshData();
+    eventSource.addEventListener("request-answered", () => {
+      refreshData();
     });
 
-    eventSource.addEventListener("request-timeout", () => {refreshData();
+    eventSource.addEventListener("request-timeout", () => {
+      refreshData();
     });
-
-    eventSource.onerror = () => {
-      console.error("[SSE] Connection error");
-      setConnected(false);
-    };
 
     eventSourceRef.current = eventSource;
 
     return () => {
       eventSource.close();
-      setConnected(false);
     };
   }, []);
 
-  // Load data on mount and tab change
   useEffect(() => {
     loadData();
   }, [activeTab]);
 
-  // Submit answer
   async function handleSubmitAnswer(requestId) {
     const answer = answerText[requestId];
     if (!answer || !answer.trim()) {
@@ -161,14 +129,13 @@ function SupervisorDashboard() {
       toast.dismiss(loadingToast);
 
       if (result.emailSent) {
-        toast.success("Answer submitted and email sent successfully! 📧");
+        toast.success("Answer submitted and email sent! 📧");
       } else if (result.noEmail) {
-        toast.success("Answer submitted! (No email provided by customer)");
+        toast.success("Answer submitted!");
       } else {
-        toast.success("Answer submitted successfully!");
+        toast.success("Answer submitted!");
       }
     } catch (error) {
-      console.error("Error submitting answer:", error);
       toast.dismiss(loadingToast);
       toast.error(error.message || "Failed to submit answer");
     } finally {
@@ -183,57 +150,45 @@ function SupervisorDashboard() {
     const diffMins = Math.floor(diffMs / 60000);
 
     if (diffMins < 1) return "Just now";
-    if (diffMins < 60) return `${diffMins} min ago`;
-    if (diffMins < 1440) return `${Math.floor(diffMins / 60)} hours ago`;
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffMins < 1440) return `${Math.floor(diffMins / 60)}h ago`;
     return date.toLocaleDateString();
   }
 
   return (
-    <div className="min-h-screen bg-black text-white p-6">
-      <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <div className="mb-8 flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold mb-2">Supervisor Dashboard</h1>
-            <p className="text-gray-400">
-              Manage customer questions and help the AI learn
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <div
-              className={`w-3 h-3 rounded-full ${
-                connected ? "bg-green-500" : "bg-red-500"
-              }`}
-            />
-            <span className="text-sm text-gray-400">
-              {connected ? "Connected" : "Disconnected"}
-            </span>
-          </div>
+    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-black to-gray-950">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="mb-12">
+          <h1 className="text-4xl font-light text-white mb-2">
+            Supervisor Dashboard
+          </h1>
+          <p className="text-gray-500">
+            Manage customer inquiries and train the AI
+          </p>
         </div>
 
-        {/* Stats */}
         {stats && (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-            <div className="bg-gray-900 rounded-lg p-4">
-              <div className="text-2xl font-bold text-yellow-400">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-6 hover:bg-white/10 transition-all">
+              <div className="text-3xl font-light text-yellow-400 mb-1">
                 {stats.pending}
               </div>
               <div className="text-sm text-gray-400">Pending</div>
             </div>
-            <div className="bg-gray-900 rounded-lg p-4">
-              <div className="text-2xl font-bold text-green-400">
+            <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-6 hover:bg-white/10 transition-all">
+              <div className="text-3xl font-light text-green-400 mb-1">
                 {stats.resolved}
               </div>
               <div className="text-sm text-gray-400">Resolved</div>
             </div>
-            <div className="bg-gray-900 rounded-lg p-4">
-              <div className="text-2xl font-bold text-red-400">
+            <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-6 hover:bg-white/10 transition-all">
+              <div className="text-3xl font-light text-red-400 mb-1">
                 {stats.timeout}
               </div>
               <div className="text-sm text-gray-400">Timeout</div>
             </div>
-            <div className="bg-gray-900 rounded-lg p-4">
-              <div className="text-2xl font-bold text-purple-400">
+            <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-6 hover:bg-white/10 transition-all">
+              <div className="text-3xl font-light text-purple-400 mb-1">
                 {stats.learnedAnswers}
               </div>
               <div className="text-sm text-gray-400">Learned</div>
@@ -241,82 +196,55 @@ function SupervisorDashboard() {
           </div>
         )}
 
-        {/* Tabs */}
-        <div className="flex space-x-4 mb-6 border-b border-gray-800">
-          <button
-            onClick={() => setActiveTab("pending")}
-            className={`pb-3 px-4 font-medium transition-colors ${
-              activeTab === "pending"
-                ? "text-white border-b-2 border-white"
-                : "text-gray-400 hover:text-gray-300"
-            }`}
-          >
-            Pending Requests
-          </button>
-          <button
-            onClick={() => setActiveTab("history")}
-            className={`pb-3 px-4 font-medium transition-colors ${
-              activeTab === "history"
-                ? "text-white border-b-2 border-white"
-                : "text-gray-400 hover:text-gray-300"
-            }`}
-          >
-            History
-          </button>
-          <button
-            onClick={() => setActiveTab("learned")}
-            className={`pb-3 px-4 font-medium transition-colors ${
-              activeTab === "learned"
-                ? "text-white border-b-2 border-white"
-                : "text-gray-400 hover:text-gray-300"
-            }`}
-          >
-            Learned Answers
-          </button>
+        <div className="flex gap-2 mb-8">
+          {["pending", "history", "learned"].map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`px-6 py-3 rounded-full text-sm font-medium transition-all ${
+                activeTab === tab
+                  ? "bg-white text-black"
+                  : "text-gray-400 hover:text-white hover:bg-white/5"
+              }`}
+            >
+              {tab.charAt(0).toUpperCase() + tab.slice(1)}
+            </button>
+          ))}
         </div>
 
-        {/* Content */}
         {loading ? (
-          <div className="text-center py-12 text-gray-400">Loading...</div>
+          <div className="flex items-center justify-center py-20">
+            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-purple-400"></div>
+          </div>
         ) : (
           <>
-            {/* Pending Requests */}
             {activeTab === "pending" && (
               <div className="space-y-4">
                 {requests.length === 0 ? (
-                  <div className="text-center py-12 text-gray-400">
-                    No pending requests. Great job! 🎉
+                  <div className="text-center py-20 text-gray-500">
+                    <div className="text-4xl mb-4">🎉</div>
+                    <div>No pending requests</div>
                   </div>
                 ) : (
                   requests.map((request) => (
                     <div
                       key={request.id}
-                      className="bg-gray-900 rounded-lg p-6 border border-gray-800"
+                      className="bg-white/5 backdrop-blur-sm rounded-2xl p-6 hover:bg-white/10 transition-all"
                     >
                       <div className="flex justify-between items-start mb-4">
-                        <div>
-                          <div className="text-sm text-gray-400 mb-1">
+                        <div className="flex-1">
+                          <div className="text-sm text-gray-500 mb-2">
                             {formatTimestamp(request.created_at)}
-                          </div>
-                          <div className="text-xs text-gray-500">
-                            Room: {request.room_name}
                             {request.customer_email && (
-                              <span className="ml-2 text-green-400">
-                                📧 {request.customer_email}
+                              <span className="ml-3 text-green-400">
+                                {request.customer_email}
                               </span>
                             )}
                           </div>
+                          <div className="text-lg text-white mb-4">
+                            {request.question}
+                          </div>
                         </div>
-                        <span className="px-3 py-1 bg-yellow-900 text-yellow-300 text-xs rounded-full">
-                          Pending
-                        </span>
-                      </div>
-
-                      <div className="mb-4">
-                        <div className="text-sm text-gray-400 mb-2">
-                          Customer Question:
-                        </div>
-                        <div className="text-lg">{request.question}</div>
                       </div>
 
                       <div className="space-y-3">
@@ -328,19 +256,17 @@ function SupervisorDashboard() {
                               [request.id]: e.target.value,
                             }))
                           }
-                          placeholder="Type your answer here..."
-                          className="w-full bg-gray-800 text-white rounded-lg p-3 border border-gray-700 focus:border-gray-600 focus:outline-none resize-none"
+                          placeholder="Type your answer..."
+                          className="w-full bg-white/5 text-white rounded-xl p-4 focus:bg-white/10 focus:outline-none resize-none placeholder-gray-500"
                           rows={3}
                         />
                         <button
                           onClick={() => handleSubmitAnswer(request.id)}
                           disabled={submitting === request.id}
-                          className="px-6 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
+                          className="px-6 py-3 bg-white text-black hover:bg-gray-200 disabled:bg-gray-700 disabled:text-gray-500 disabled:cursor-not-allowed rounded-xl transition-all font-medium"
                         >
                           {submitting === request.id
                             ? "Submitting..."
-                            : request.customer_email
-                            ? "Submit Answer & Send Email"
                             : "Submit Answer"}
                         </button>
                       </div>
@@ -350,40 +276,34 @@ function SupervisorDashboard() {
               </div>
             )}
 
-            {/* History */}
             {activeTab === "history" && (
               <div className="space-y-4">
                 {requests.length === 0 ? (
-                  <div className="text-center py-12 text-gray-400">
+                  <div className="text-center py-20 text-gray-500">
                     No history yet
                   </div>
                 ) : (
                   requests.map((request) => (
                     <div
                       key={request.id}
-                      className="bg-gray-900 rounded-lg p-6 border border-gray-800"
+                      className="bg-white/5 backdrop-blur-sm rounded-2xl p-6 hover:bg-white/10 transition-all"
                     >
                       <div className="flex justify-between items-start mb-4">
-                        <div>
-                          <div className="text-sm text-gray-400 mb-1">
-                            {formatTimestamp(request.created_at)}
-                          </div>
-                          <div className="text-xs text-gray-500">
-                            Room: {request.room_name}
-                            {request.customer_email && (
-                              <span className="ml-2 text-green-400">
-                                📧 {request.customer_email}
-                              </span>
-                            )}
-                          </div>
+                        <div className="text-sm text-gray-500">
+                          {formatTimestamp(request.created_at)}
+                          {request.customer_email && (
+                            <span className="ml-3 text-green-400">
+                              {request.customer_email}
+                            </span>
+                          )}
                         </div>
                         <span
                           className={`px-3 py-1 text-xs rounded-full ${
                             request.status === "resolved"
-                              ? "bg-green-900 text-green-300"
+                              ? "bg-green-500/20 text-green-400"
                               : request.status === "timeout"
-                              ? "bg-red-900 text-red-300"
-                              : "bg-gray-800 text-gray-300"
+                              ? "bg-red-500/20 text-red-400"
+                              : "bg-gray-500/20 text-gray-400"
                           }`}
                         >
                           {request.status}
@@ -391,21 +311,17 @@ function SupervisorDashboard() {
                       </div>
 
                       <div className="mb-3">
-                        <div className="text-sm text-gray-400 mb-1">
-                          Question:
+                        <div className="text-white mb-2">
+                          {request.question}
                         </div>
-                        <div>{request.question}</div>
                       </div>
 
                       {request.answer && (
-                        <div>
-                          <div className="text-sm text-gray-400 mb-1">
-                            Answer:
-                          </div>
+                        <div className="mt-4 pt-4 border-t border-white/10">
                           <div className="text-green-400">{request.answer}</div>
                           {request.answered_at && (
-                            <div className="text-xs text-gray-500 mt-1">
-                              Answered {formatTimestamp(request.answered_at)}
+                            <div className="text-xs text-gray-500 mt-2">
+                              {formatTimestamp(request.answered_at)}
                             </div>
                           )}
                         </div>
@@ -416,36 +332,32 @@ function SupervisorDashboard() {
               </div>
             )}
 
-            {/* Learned Answers */}
             {activeTab === "learned" && (
               <div className="space-y-4">
                 {learnedAnswers.length === 0 ? (
-                  <div className="text-center py-12 text-gray-400">
-                    No learned answers yet. Answer some questions to build the
-                    knowledge base!
+                  <div className="text-center py-20 text-gray-500">
+                    No learned answers yet
                   </div>
                 ) : (
                   learnedAnswers.map((item) => (
                     <div
                       key={item.id}
-                      className="bg-gray-900 rounded-lg p-6 border border-gray-800"
+                      className="bg-white/5 backdrop-blur-sm rounded-2xl p-6 hover:bg-white/10 transition-all"
                     >
                       <div className="flex justify-between items-start mb-4">
-                        <div className="text-sm text-gray-400">
+                        <div className="text-sm text-gray-500">
                           {formatTimestamp(item.created_at)}
                         </div>
                         <div className="text-xs text-gray-500">
-                          Used {item.times_used} times
+                          Used {item.times_used}x
                         </div>
                       </div>
 
-                      <div className="mb-3">
-                        <div className="text-sm text-gray-400 mb-1">Q:</div>
-                        <div className="text-lg">{item.question}</div>
+                      <div className="mb-4">
+                        <div className="text-white mb-2">{item.question}</div>
                       </div>
 
-                      <div>
-                        <div className="text-sm text-gray-400 mb-1">A:</div>
+                      <div className="pt-4 border-t border-white/10">
                         <div className="text-green-400">{item.answer}</div>
                       </div>
                     </div>
