@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
-export function useDeepgramSTT(onTranscript, options = {}) {
+export function useDeepgramSTT(onTranscript) {
   const [isListening, setIsListening] = useState(false);
   const [interimText, setInterimText] = useState(""); // For showing interim results
   const socketRef = useRef(null);
@@ -21,8 +21,6 @@ export function useDeepgramSTT(onTranscript, options = {}) {
       if (!apiKey) {
         throw new Error("Deepgram API key not available");
       }
-
-      console.log("[Deepgram] Starting with API key");
 
       // Get microphone access with enhanced audio constraints
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -58,7 +56,6 @@ export function useDeepgramSTT(onTranscript, options = {}) {
       socketRef.current = socket;
 
       socket.onopen = () => {
-        console.log("[Deepgram] ✅ WebSocket Connected");
         setIsListening(true);
 
         // Use AudioContext to get raw PCM data
@@ -87,17 +84,13 @@ export function useDeepgramSTT(onTranscript, options = {}) {
 
         source.connect(processor);
         processor.connect(audioContext.destination);
-
-        console.log("[Deepgram] Audio processing started");
       };
 
       socket.onmessage = (message) => {
         try {
           const data = JSON.parse(message.data);
 
-          // Handle speech started/ended events
           if (data.type === "SpeechStarted") {
-            console.log("[Deepgram] 🎤 Speech started");
             finalTranscriptRef.current = "";
             setInterimText("");
             return;
@@ -105,21 +98,14 @@ export function useDeepgramSTT(onTranscript, options = {}) {
 
           const transcript = data.channel?.alternatives?.[0]?.transcript;
           const isFinal = data.is_final;
-          const speechFinal = data.speech_final; // End of utterance
+          const speechFinal = data.speech_final;
 
           if (transcript && transcript.trim()) {
             if (isFinal) {
-              // This is a finalized segment
               finalTranscriptRef.current +=
                 (finalTranscriptRef.current ? " " : "") + transcript;
-              console.log("[Deepgram] ✅ Final segment:", transcript);
 
-              // If speech is complete, send the full transcript
               if (speechFinal) {
-                console.log(
-                  "[Deepgram] 🎯 Complete utterance:",
-                  finalTranscriptRef.current
-                );
                 if (onTranscript && finalTranscriptRef.current.trim()) {
                   onTranscript(finalTranscriptRef.current.trim());
                 }
@@ -127,34 +113,27 @@ export function useDeepgramSTT(onTranscript, options = {}) {
                 setInterimText("");
               }
             } else {
-              // Interim result - for display/feedback
               setInterimText(transcript);
-              console.log("[Deepgram] 💬 Interim:", transcript);
             }
           }
         } catch (error) {
-          console.error("[Deepgram] Error parsing message:", error);
+          // Silent error handling
         }
       };
 
-      socket.onerror = (error) => {
-        console.error("[Deepgram] WebSocket Error:", error);
+      socket.onerror = () => {
         stopListening();
       };
 
-      socket.onclose = (event) => {
-        console.log("[Deepgram] Disconnected:", event.code, event.reason);
+      socket.onclose = () => {
         setIsListening(false);
       };
     } catch (error) {
-      console.error("[Deepgram] Failed to start:", error);
       setIsListening(false);
     }
   };
 
   const stopListening = () => {
-    console.log("[Deepgram] Stopping...");
-
     if (processorRef.current) {
       processorRef.current.disconnect();
       processorRef.current = null;
