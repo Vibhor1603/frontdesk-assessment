@@ -7,10 +7,15 @@ function SupervisorDashboard() {
   const [activeTab, setActiveTab] = useState("pending");
   const [requests, setRequests] = useState([]);
   const [learnedAnswers, setLearnedAnswers] = useState([]);
+  const [knowledgeBase, setKnowledgeBase] = useState([]);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [answerText, setAnswerText] = useState({});
   const [submitting, setSubmitting] = useState(null);
+  const [editingItem, setEditingItem] = useState(null);
+  const [editForm, setEditForm] = useState({ question: "", answer: "" });
+  const [isAddingNew, setIsAddingNew] = useState(false);
+  const [newItemForm, setNewItemForm] = useState({ question: "", answer: "" });
   const eventSourceRef = useRef(null);
 
   async function fetchRequests() {
@@ -33,6 +38,13 @@ function SupervisorDashboard() {
     return response.json();
   }
 
+  async function fetchKnowledgeBase() {
+    const response = await fetch(
+      `${API_BASE_URL}/api/supervisor/knowledge-base`
+    );
+    return response.json();
+  }
+
   async function loadData() {
     try {
       setLoading(true);
@@ -45,6 +57,10 @@ function SupervisorDashboard() {
       if (activeTab === "learned") {
         const learnedData = await fetchLearnedAnswers();
         setLearnedAnswers(learnedData);
+      }
+      if (activeTab === "knowledge") {
+        const kbData = await fetchKnowledgeBase();
+        setKnowledgeBase(kbData);
       }
     } catch (error) {
       toast.error("Failed to load data");
@@ -64,6 +80,10 @@ function SupervisorDashboard() {
       if (activeTab === "learned") {
         const learnedData = await fetchLearnedAnswers();
         setLearnedAnswers(learnedData);
+      }
+      if (activeTab === "knowledge") {
+        const kbData = await fetchKnowledgeBase();
+        setKnowledgeBase(kbData);
       }
     } catch (error) {}
   }
@@ -143,6 +163,98 @@ function SupervisorDashboard() {
     }
   }
 
+  async function handleEditItem(item) {
+    setEditingItem(item.id);
+    setEditForm({ question: item.question, answer: item.answer });
+  }
+
+  async function handleSaveEdit(itemId) {
+    if (!editForm.question.trim() || !editForm.answer.trim()) {
+      toast.error("Question and answer are required");
+      return;
+    }
+
+    const loadingToast = toast.loading("Updating...");
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/api/supervisor/knowledge-base/${itemId}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(editForm),
+        }
+      );
+
+      if (!response.ok) throw new Error("Failed to update");
+
+      setEditingItem(null);
+      setEditForm({ question: "", answer: "" });
+      await refreshData();
+      toast.dismiss(loadingToast);
+      toast.success("Updated successfully!");
+    } catch (error) {
+      toast.dismiss(loadingToast);
+      toast.error("Failed to update");
+    }
+  }
+
+  async function handleDeleteItem(itemId) {
+    if (!confirm("Are you sure you want to delete this item?")) return;
+
+    const loadingToast = toast.loading("Deleting...");
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/api/supervisor/knowledge-base/${itemId}`,
+        {
+          method: "DELETE",
+        }
+      );
+
+      if (!response.ok) throw new Error("Failed to delete");
+
+      await refreshData();
+      toast.dismiss(loadingToast);
+      toast.success("Deleted successfully!");
+    } catch (error) {
+      toast.dismiss(loadingToast);
+      toast.error("Failed to delete");
+    }
+  }
+
+  async function handleAddNew() {
+    if (!newItemForm.question.trim() || !newItemForm.answer.trim()) {
+      toast.error("Question and answer are required");
+      return;
+    }
+
+    const loadingToast = toast.loading("Creating...");
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/api/supervisor/knowledge-base`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(newItemForm),
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Failed to create");
+      }
+
+      setIsAddingNew(false);
+      setNewItemForm({ question: "", answer: "" });
+      await refreshData();
+      toast.dismiss(loadingToast);
+      toast.success("Created successfully!");
+    } catch (error) {
+      toast.dismiss(loadingToast);
+      toast.error(error.message || "Failed to create");
+    }
+  }
+
   function formatTimestamp(timestamp) {
     const date = new Date(timestamp);
     const now = new Date();
@@ -196,8 +308,8 @@ function SupervisorDashboard() {
           </div>
         )}
 
-        <div className="flex gap-2 mb-8">
-          {["pending", "history", "learned"].map((tab) => (
+        <div className="flex gap-2 mb-8 flex-wrap">
+          {["pending", "history", "learned", "knowledge"].map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -207,7 +319,9 @@ function SupervisorDashboard() {
                   : "text-gray-400 hover:text-white hover:bg-white/5"
               }`}
             >
-              {tab.charAt(0).toUpperCase() + tab.slice(1)}
+              {tab === "knowledge"
+                ? "Knowledge Base"
+                : tab.charAt(0).toUpperCase() + tab.slice(1)}
             </button>
           ))}
         </div>
@@ -360,6 +474,187 @@ function SupervisorDashboard() {
                       <div className="pt-4 border-t border-white/10">
                         <div className="text-green-400">{item.answer}</div>
                       </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
+
+            {activeTab === "knowledge" && (
+              <div className="space-y-4">
+                <div className="flex justify-end mb-4">
+                  <button
+                    onClick={() => setIsAddingNew(true)}
+                    className="px-6 py-3 bg-white text-black hover:bg-gray-200 rounded-xl transition-all font-medium"
+                  >
+                    + Add New
+                  </button>
+                </div>
+
+                {isAddingNew && (
+                  <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-6 mb-4">
+                    <h3 className="text-white text-lg mb-4">
+                      Add New Knowledge Base Item
+                    </h3>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="text-sm text-gray-400 mb-2 block">
+                          Question
+                        </label>
+                        <input
+                          type="text"
+                          value={newItemForm.question}
+                          onChange={(e) =>
+                            setNewItemForm((prev) => ({
+                              ...prev,
+                              question: e.target.value,
+                            }))
+                          }
+                          placeholder="Enter the question..."
+                          className="w-full bg-white/5 text-white rounded-xl p-4 focus:bg-white/10 focus:outline-none placeholder-gray-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-sm text-gray-400 mb-2 block">
+                          Answer
+                        </label>
+                        <textarea
+                          value={newItemForm.answer}
+                          onChange={(e) =>
+                            setNewItemForm((prev) => ({
+                              ...prev,
+                              answer: e.target.value,
+                            }))
+                          }
+                          placeholder="Enter the answer..."
+                          className="w-full bg-white/5 text-white rounded-xl p-4 focus:bg-white/10 focus:outline-none resize-none placeholder-gray-500"
+                          rows={4}
+                        />
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={handleAddNew}
+                          className="px-6 py-2 bg-white text-black hover:bg-gray-200 rounded-xl transition-all font-medium"
+                        >
+                          Create
+                        </button>
+                        <button
+                          onClick={() => {
+                            setIsAddingNew(false);
+                            setNewItemForm({ question: "", answer: "" });
+                          }}
+                          className="px-6 py-2 bg-white/5 text-white hover:bg-white/10 rounded-xl transition-all"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {knowledgeBase.length === 0 && !isAddingNew ? (
+                  <div className="text-center py-20 text-gray-500">
+                    No knowledge base items yet. Click "Add New" to create one.
+                  </div>
+                ) : (
+                  knowledgeBase.map((item) => (
+                    <div
+                      key={item.id}
+                      className="bg-white/5 backdrop-blur-sm rounded-2xl p-6 hover:bg-white/10 transition-all"
+                    >
+                      {editingItem === item.id ? (
+                        <div className="space-y-4">
+                          <div>
+                            <label className="text-sm text-gray-400 mb-2 block">
+                              Question
+                            </label>
+                            <input
+                              type="text"
+                              value={editForm.question}
+                              onChange={(e) =>
+                                setEditForm((prev) => ({
+                                  ...prev,
+                                  question: e.target.value,
+                                }))
+                              }
+                              className="w-full bg-white/5 text-white rounded-xl p-4 focus:bg-white/10 focus:outline-none"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-sm text-gray-400 mb-2 block">
+                              Answer
+                            </label>
+                            <textarea
+                              value={editForm.answer}
+                              onChange={(e) =>
+                                setEditForm((prev) => ({
+                                  ...prev,
+                                  answer: e.target.value,
+                                }))
+                              }
+                              className="w-full bg-white/5 text-white rounded-xl p-4 focus:bg-white/10 focus:outline-none resize-none"
+                              rows={4}
+                            />
+                          </div>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => handleSaveEdit(item.id)}
+                              className="px-6 py-2 bg-white text-black hover:bg-gray-200 rounded-xl transition-all font-medium"
+                            >
+                              Save
+                            </button>
+                            <button
+                              onClick={() => {
+                                setEditingItem(null);
+                                setEditForm({ question: "", answer: "" });
+                              }}
+                              className="px-6 py-2 bg-white/5 text-white hover:bg-white/10 rounded-xl transition-all"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="flex justify-between items-start mb-4">
+                            <div className="text-sm text-gray-500">
+                              {formatTimestamp(item.created_at)}
+                            </div>
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => handleEditItem(item)}
+                                className="text-blue-400 hover:text-blue-300 text-sm"
+                              >
+                                Edit
+                              </button>
+                              <button
+                                onClick={() => handleDeleteItem(item.id)}
+                                className="text-red-400 hover:text-red-300 text-sm"
+                              >
+                                Delete
+                              </button>
+                            </div>
+                          </div>
+
+                          <div className="mb-4">
+                            <div className="text-sm text-gray-400 mb-1">Q:</div>
+                            <div className="text-white mb-4">
+                              {item.question}
+                            </div>
+                          </div>
+
+                          <div className="pt-4 border-t border-white/10">
+                            <div className="text-sm text-gray-400 mb-1">A:</div>
+                            <div className="text-green-400">{item.answer}</div>
+                          </div>
+
+                          {item.times_used > 0 && (
+                            <div className="text-xs text-gray-500 mt-4">
+                              Used {item.times_used} times
+                            </div>
+                          )}
+                        </>
+                      )}
                     </div>
                   ))
                 )}

@@ -1,6 +1,7 @@
 import express from "express";
 import { supabase } from "../../../core/db/supabase.js";
 import { sendAnswerEmail, isValidEmail } from "../services/emailService.js";
+import { generateEmbedding } from "../../knowledge/services/embeddingService.js";
 
 const router = express.Router();
 
@@ -191,7 +192,124 @@ router.get("/stats", async (req, res) => {
   }
 });
 
-// POST /help-requests/:id/timeout removed - not used by current admin dashboard
-// Timeout handling is done via periodic job in index.js
+// Get all knowledge base items
+router.get("/knowledge-base", async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from("knowledge_base")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+    res.json(data);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch knowledge base" });
+  }
+});
+
+// Create new knowledge base item
+router.post("/knowledge-base", async (req, res) => {
+  try {
+    const { question, answer } = req.body;
+
+    if (!question || !answer) {
+      return res
+        .status(400)
+        .json({ error: "Question and answer are required" });
+    }
+
+    if (question.trim().length < 3 || answer.trim().length < 3) {
+      return res
+        .status(400)
+        .json({ error: "Question and answer must be at least 3 characters" });
+    }
+
+    const embedding = await generateEmbedding(question.trim());
+
+    if (!embedding || !Array.isArray(embedding) || embedding.length !== 1536) {
+      throw new Error("Invalid embedding generated");
+    }
+
+    const { data, error } = await supabase
+      .from("knowledge_base")
+      .insert({
+        question: question.trim(),
+        answer: answer.trim(),
+        embedding,
+        times_used: 0,
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+    res.json({ success: true, data });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ error: error.message || "Failed to create knowledge base item" });
+  }
+});
+
+// Update knowledge base item
+router.put("/knowledge-base/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { question, answer } = req.body;
+
+    if (!question || !answer) {
+      return res
+        .status(400)
+        .json({ error: "Question and answer are required" });
+    }
+
+    if (question.trim().length < 3 || answer.trim().length < 3) {
+      return res
+        .status(400)
+        .json({ error: "Question and answer must be at least 3 characters" });
+    }
+
+    const embedding = await generateEmbedding(question.trim());
+
+    if (!embedding || !Array.isArray(embedding) || embedding.length !== 1536) {
+      throw new Error("Invalid embedding generated");
+    }
+
+    const { data, error } = await supabase
+      .from("knowledge_base")
+      .update({
+        question: question.trim(),
+        answer: answer.trim(),
+        embedding,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    res.json({ success: true, data });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ error: error.message || "Failed to update knowledge base item" });
+  }
+});
+
+// Delete knowledge base item
+router.delete("/knowledge-base/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const { error } = await supabase
+      .from("knowledge_base")
+      .delete()
+      .eq("id", id);
+
+    if (error) throw error;
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to delete knowledge base item" });
+  }
+});
 
 export default router;
